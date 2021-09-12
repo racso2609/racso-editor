@@ -1,13 +1,27 @@
 const {ipcRenderer} = require('electron');
 const path = require('path');
+const {MultiCompiler} = require('webpack');
+const {defaultKeys,commandModeKeys} = require('../editorConfig/shortKeysList');
+//let {default} = shortKeys;
 
 window.addEventListener('DOMContentLoaded', () => {
+  var myCodeMirror = CodeMirror(document.body, {
+    mode: 'javascript',
+    autocorrect: true,
+    lineNumbers: true,
+    disableInput: true,
+    keyMap: defaultKeys,
+    extraKeys: commandModeKeys,
+    showCursorWhenSelecting: true,
+    
+});
+
   let elements = {
     fileName: document.getElementById('file-name'),
     openFileBtn: document.getElementById('open-file-btn'),
     createFileBtn: document.getElementById('create-file-btn'),
-    fileTextarea: document.getElementById('text-area'),
     saveFileBtn: document.getElementById('save-file-btn'),
+    texEditor: myCodeMirror,
     closeFileBtn: document.getElementById('close-file-btn'),
     tabsSection: document.getElementById('tabs'),
   };
@@ -16,10 +30,10 @@ window.addEventListener('DOMContentLoaded', () => {
     fileName,
     openFileBtn,
     createFileBtn,
-    fileTextarea,
     saveFileBtn,
     closeFileBtn,
     tabsSection,
+    texEditor,
   } = elements;
   const getFilePath = (filePath, length) => {
     return filePath.length <= length
@@ -42,28 +56,22 @@ window.addEventListener('DOMContentLoaded', () => {
   };
   const handleDocumentChange = (filePath, content = '', disable = false) => {
     fileName.innerHTML = getFilePath(filePath, 30);
-
-    if (!disable) {
-      fileTextarea.removeAttribute('disabled');
-    } else {
-      fileTextarea.setAttribute('disabled', true);
-    }
-    fileTextarea.value = content;
-    fileTextarea.focus();
+    texEditor.setOption('disableInput', disable);
+    texEditor.setValue(content);
   };
   //emmit events
+texEditor.on('change',()=>{
+//console.log('cambie')
+//ipcRenderer.send('content-update', {
+      //filePath: fileOpen,
+      //content: texEditor.getValue(),
+    //});
+})
   openFileBtn.addEventListener('click', () => {
     ipcRenderer.send('open-document-triggered');
   });
   createFileBtn.addEventListener('click', () => {
     ipcRenderer.send('create-document-triggered');
-  });
-
-  fileTextarea.addEventListener('input', e => {
-    ipcRenderer.send('content-update', {
-      filePath: fileOpen,
-      content: e.target.value,
-    });
   });
 
   saveFileBtn.addEventListener('click', () => {
@@ -75,14 +83,21 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('request-document-close', fileOpen);
   });
   //capture event
-  ipcRenderer.on('document-closed', (_, filePath) => {
+  ipcRenderer.on('document-closed', (_, {filePath, tabsCount, nextTab}) => {
     let removedTab = document.getElementById(filePath);
     tabsSection.removeChild(removedTab);
-
-    handleDocumentChange('Not selected', '', true);
+    if (!tabsCount) {
+      handleDocumentChange('Not selected', '', true);
+    } else {
+      handleDocumentChange(nextTab.filePath, nextTab.content);
+    }
   });
+ipcRenderer.on('changed-vim-mode',(_)=>{
+ myCodeMirror.setOption('extraKeys', myCodeMirror.actualKeys)
+})
   ipcRenderer.on('document-opened', (_, {filePath, content}) => {
     handleDocumentChange(filePath, content);
+//console.log(content)
     fileOpen = filePath;
     selectActive(filePath);
   });
@@ -91,7 +106,10 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   ipcRenderer.on('changed-tab', (_, filePath) => {
-    selectActive(filePath);
+//handleDocumentChange(filePath,content)
+myCodeMirror.on('change')
+selectActive(filePath);
+
   });
 
   ipcRenderer.on('created-tab', (_, filePath) => {
@@ -99,6 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
     element.setAttribute('class', 'tab-item');
     element.id = filePath;
     element.onclick = () => {
+//myCodeMirror.off('change',()=>console.log('hola'))
       ipcRenderer.send('change-tab', filePath);
     };
     let p = document.createElement('p');

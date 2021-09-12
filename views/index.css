@@ -47,3 +47,6 @@ section{
 .tab-active{
   background-color: green;
 }
+.CodeMirror{
+height: 100% !important;
+}

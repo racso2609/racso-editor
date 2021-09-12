@@ -36,13 +36,20 @@ function createWindow() {
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       preload: path.join(__dirname, 'controllers/controller.js'),
+      //preload: path.join(__dirname, 'editor.js'),
       nativeWindowOpen: false,
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
     },
   });
   win.loadFile('./views/index.html');
 }
 
-app.whenReady().then(createWindow).then(()=>tabs=[]);
+app
+  .whenReady()
+  .then(createWindow)
+  .then(() => (tabs = []));
 
 const openFile = filePath => {
   fs.readFile(filePath, 'utf8', (error, content) => {
@@ -104,7 +111,7 @@ ipcMain.on('request-document-close', (_, filePath) => {
     myTab.updateFile();
   }
   tabs = tabs.filter(tab => tab.filePath !== filePath);
-  win.webContents.send('document-closed', filePath);
+  win.webContents.send('document-closed', {filePath,tabsCount: tabs.length,nextTab: tabs[0]});
   if (tabs.length)
     win.webContents.send('document-opened', {
       filePath: tabs[0].filePath,
@@ -114,9 +121,10 @@ ipcMain.on('request-document-close', (_, filePath) => {
 });
 ipcMain.on('change-tab', (_, filePath) => {
   let myTab = getTab(filePath)[0];
-  win.webContents.send('document-opened', {
-    filePath: myTab.filePath,
-    content: myTab.content,
-  });
+
+      win.webContents.send('document-opened', {filePath, content: myTab.content});
   win.webContents.send('changed-tab', filePath);
 });
+ipcMain.on('change-vim-mode',(_)=>{
+win.webContents.send('changed-vim-mode')
+})

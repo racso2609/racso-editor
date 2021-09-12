@@ -1,4 +1,4 @@
-module.exports = {
+exports  = {
     "env": {
         "browser": true,
         "commonjs": true,

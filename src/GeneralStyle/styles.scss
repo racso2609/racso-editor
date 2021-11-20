@@ -1,0 +1,50 @@
+@import "./Colors.scss";
+body {
+  height: 100vh;
+  padding: 0px;
+}
+#root {
+  overflow: hidden;
+  height: 99vh;
+  padding: 0px;
+}
+
+.content-tab {
+  display: flex;
+  width: 100%;
+  overflow: scroll;
+  //put background color
+  &::-webkit-scrollbar {
+     height: 10px;
+     width: 100%;
+     background-color: transparent;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  /* Handle */
+&::-webkit-scrollbar-thumb {
+  background: rgba(6, 6, 6, 0.249);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+  // grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  // gap: 10px;
+
+  .tab {
+    border: 1px solid $black;
+    padding: 2px 12px;
+    display: flex;
+    justify-content: center;
+    max-width: 100px;
+    max-height: 20px;
+
+    .tab-name {
+      max-width: 90%;
+      overflow: hidden;
+    }
+  }
+}
